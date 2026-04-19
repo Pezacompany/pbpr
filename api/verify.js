@@ -3,10 +3,10 @@ const { Client, GatewayIntentBits } = require('discord.js');
 export default async function handler(req, res) {
     const { code, state } = req.query;
 
-    const CLIENT_ID = "5490810913407316280"; 
+    const CLIENT_ID = "1495421531822624899"; 
     const CLIENT_SECRET = process.env.ROBLOX_SECRET; 
     const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
-    const GUILD_ID = "1495421531822624899";
+    const GUILD_ID = "1493713101151928340";
     const ROLE_ID = "1494031035841777836";
     const REDIRECT_URI = "https://pbpr.vercel.app/api/verify";
     const LOG_CHANNEL_ID = "1495433566484562061"; // Tutaj bot będzie odbierał dane do bazy
