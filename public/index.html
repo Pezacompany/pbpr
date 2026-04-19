@@ -4,254 +4,219 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weryfikacja | Buckingham RP</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #00A2FF;
             --accent: #00fbff;
-            --bg: #050505;
-            --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.1);
+            --success: #00ff88;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: var(--bg);
-            color: white;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
             overflow: hidden;
-            position: relative;
+            background: #000;
         }
 
-        /* Animowane Tło */
-        .bg-animate {
-            position: absolute;
+        /* Tło z Twojego linku */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 50% 50%, #001a33 0%, #050505 100%);
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), 
+                        url('https://media.discordapp.net/attachments/1493713102368280680/1494050832533164155/image.png?format=webp&quality=lossless');
+            background-size: cover;
+            background-position: center;
             z-index: -1;
-        }
-
-        .orb {
-            position: absolute;
-            width: 400px;
-            height: 400px;
-            background: var(--primary);
-            filter: blur(150px);
-            border-radius: 50%;
-            opacity: 0.15;
-            animation: float 20s infinite alternate;
-        }
-
-        @keyframes float {
-            0% { transform: translate(-20%, -20%); }
-            100% { transform: translate(20%, 20%); }
+            transform: scale(1.1);
         }
 
         .container {
-            background: var(--glass);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            padding: 50px 40px;
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 30px;
-            border: 1px solid var(--border);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.02);
-            text-align: center;
-            max-width: 450px;
+            padding: 40px;
             width: 90%;
-            z-index: 10;
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            position: relative;
         }
 
         h1 {
             font-family: 'Montserrat', sans-serif;
-            font-weight: 800;
-            font-size: 28px;
-            letter-spacing: 4px;
-            margin-bottom: 5px;
-            background: linear-gradient(to right, #fff, var(--primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            font-size: 26px;
+            letter-spacing: 3px;
+            color: #fff;
             text-transform: uppercase;
-        }
-
-        .subtitle {
-            font-size: 12px;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 2px;
             margin-bottom: 30px;
-            font-weight: 600;
         }
 
-        p {
-            color: #aaa;
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 20px;
+        /* Pasek postępu */
+        .progress-bar {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .dot {
+            width: 40px;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            transition: 0.4s;
+        }
+        .dot.active { background: var(--primary); box-shadow: 0 0 10px var(--primary); }
+
+        /* Sekcje kroków */
+        .step { display: none; animation: slideIn 0.4s ease-out; }
+        .step.active { display: block; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        .step-label {
-            display: block;
-            text-align: left;
-            font-size: 11px;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
+        p { color: #ccc; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
 
-        .code-box {
-            background: rgba(0, 0, 0, 0.4);
+        .code-display {
+            background: rgba(0,0,0,0.5);
             padding: 20px;
             border-radius: 15px;
-            border: 1px solid rgba(0, 162, 255, 0.3);
-            font-family: 'Montserrat', monospace;
-            font-size: 20px;
+            border: 1px dashed var(--primary);
+            font-family: monospace;
+            font-size: 22px;
             color: var(--accent);
-            margin-bottom: 25px;
-            position: relative;
+            letter-spacing: 3px;
             cursor: pointer;
             transition: 0.3s;
-            box-shadow: 0 0 15px rgba(0, 162, 255, 0.1);
+            margin-bottom: 15px;
         }
-
-        .code-box:hover {
-            border-color: var(--primary);
-            box-shadow: 0 0 25px rgba(0, 162, 255, 0.2);
-            transform: scale(1.02);
-        }
+        .code-display:hover { background: rgba(0, 162, 255, 0.1); }
 
         input {
             width: 100%;
-            padding: 15px 20px;
+            padding: 15px;
             border-radius: 12px;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(255,255,255,0.1);
             background: rgba(255,255,255,0.05);
-            color: white;
-            font-size: 15px;
+            color: #fff;
+            text-align: center;
+            font-size: 16px;
+            margin-bottom: 20px;
             outline: none;
-            transition: 0.3s;
-            margin-bottom: 20px;
         }
+        input:focus { border-color: var(--primary); }
 
-        input:focus {
-            background: rgba(255,255,255,0.1);
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(0, 162, 255, 0.2);
-        }
-
-        button {
-            width: 100%;
-            padding: 18px;
+        .btn {
+            background: var(--primary);
+            color: #fff;
             border: none;
+            padding: 15px 30px;
             border-radius: 12px;
-            background: linear-gradient(45deg, var(--primary), var(--accent));
-            color: white;
-            font-family: 'Montserrat', sans-serif;
             font-weight: 700;
-            font-size: 14px;
             text-transform: uppercase;
-            letter-spacing: 1px;
             cursor: pointer;
-            transition: 0.4s;
-            box-shadow: 0 10px 20px rgba(0, 162, 255, 0.3);
+            width: 100%;
+            transition: 0.3s;
+            letter-spacing: 1px;
         }
+        .btn:hover { background: #008ae6; transform: translateY(-2px); }
 
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(0, 162, 255, 0.5);
-            filter: brightness(1.1);
-        }
+        .btn-secondary { background: rgba(255,255,255,0.1); margin-top: 10px; font-size: 12px; }
 
-        .footer {
-            margin-top: 30px;
-            font-size: 9px;
-            color: #444;
-            letter-spacing: 2px;
-        }
-
-        /* Efekt sukcesu */
-        .success-icon {
-            font-size: 60px;
-            color: #00ff88;
-            margin-bottom: 20px;
-            display: block;
-        }
+        .success-v { font-size: 50px; color: var(--success); margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
-<div class="bg-animate">
-    <div class="orb"></div>
-</div>
+<div class="background"></div>
 
-<div class="container" id="verify-box">
-    <h1>Buckingham</h1>
-    <div class="subtitle">Roleplay Experience</div>
-    
-    <span class="step-label">Krok 1: Kopiuj kod do Bio</span>
-    <div class="code-box" id="display-code" onclick="copyCode()">Ładowanie...</div>
-    
-    <span class="step-label">Krok 2: Podaj nazwę użytkownika</span>
-    <input type="text" id="rbx-nick" placeholder="Twój nick na Roblox...">
-    
-    <button onclick="startVerify()">Zatwierdź Weryfikację</button>
-    
-    <div class="footer">SECURITY SYSTEM V2.5 &copy; BUCKINGHAM</div>
+<div class="container">
+    <h1>Buckingham RP</h1>
+
+    <div class="progress-bar" id="progress">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+
+    <div class="step active" id="step1">
+        <p>Skopiuj poniższy kod i wklej go do swojego profilu Roblox w sekcji <b>"O mnie"</b>.</p>
+        <div class="code-display" id="display-code" onclick="copyCode()">Ładowanie...</div>
+        <p style="font-size: 11px; color: #888;">Kliknij kod, aby skopiować</p>
+        <button class="btn" onclick="nextStep(2)">Skopiowałem, dalej</button>
+    </div>
+
+    <div class="step" id="step2">
+        <p>Teraz wpisz swoją nazwę użytkownika (Username) z Robloxa:</p>
+        <input type="text" id="rbx-nick" placeholder="Twój nick...">
+        <button class="btn" onclick="startVerify()">Zakończ weryfikację</button>
+        <button class="btn btn-secondary" onclick="nextStep(1)">Wróć</button>
+    </div>
+
+    <div class="step" id="step3">
+        <div class="success-v">✓</div>
+        <h2 style="margin-bottom: 10px;">Gotowe!</h2>
+        <p id="success-text">Twoje konto zostało zweryfikowane. Możesz zamknąć tę stronę.</p>
+    </div>
 </div>
 
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const discordId = urlParams.get('id');
-    const status = urlParams.get('status');
-    const nick = urlParams.get('name');
 
-    // Obsługa sukcesu
-    if (status === 'success') {
-        document.getElementById('verify-box').innerHTML = `
-            <span class="success-icon">✓</span>
-            <h1>SUKCES</h1>
-            <div class="subtitle" style="color: #00ff88">Weryfikacja zakończona</div>
-            <p>Obywatel <b>${nick}</b> został pomyślnie dodany do bazy danych Buckingham RP.</p>
-            <p style="font-size: 12px; margin-top: 20px">Możesz teraz zamknąć to okno.</p>
-        `;
-    }
-
-    // Wyświetlanie kodu
+    // Ustawienie kodu na start
     if (discordId) {
         document.getElementById('display-code').innerText = `BCK-${discordId}`;
     } else {
-        document.getElementById('display-code').innerText = "BŁĄD LINKU";
-        document.getElementById('display-code').style.color = "#ff4444";
+        document.getElementById('display-code').innerText = "BŁĄD";
+    }
+
+    // Jeśli wróciliśmy z API z sukcesem
+    if (urlParams.get('status') === 'success') {
+        showStep(3);
+        document.getElementById('success-text').innerText = `Obywatel ${urlParams.get('name')} został pomyślnie zweryfikowany!`;
+    }
+
+    function nextStep(step) {
+        showStep(step);
+    }
+
+    function showStep(stepNumber) {
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.dot').forEach((d, index) => {
+            if (index < stepNumber) d.classList.add('active');
+            else d.classList.remove('active');
+        });
+        document.getElementById('step' + stepNumber).classList.add('active');
     }
 
     function copyCode() {
         const code = document.getElementById('display-code').innerText;
         navigator.clipboard.writeText(code);
-        alert("Skopiowano kod do schowka!");
+        alert("Kod skopiowany!");
     }
 
     function startVerify() {
         const username = document.getElementById('rbx-nick').value;
         if (!username) return alert("Wpisz swój nick!");
-        if (!discordId) return alert("Błąd: Brak ID Discorda.");
         
+        // Animacja ładowania na przycisku
+        const btn = event.target;
+        btn.innerText = "Sprawdzanie...";
+        btn.disabled = true;
+
         window.location.href = `/api/verify?username=${username}&state=${discordId}`;
     }
 </script>
