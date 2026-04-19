@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weryfikacja | Buckingham RP</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: radial-gradient(circle, #1a1a1a 0%, #0d0d0d 100%);
             color: white;
             display: flex;
             justify-content: center;
@@ -21,83 +21,102 @@
             background: rgba(255, 255, 255, 0.05);
             padding: 40px;
             border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
             max-width: 400px;
             width: 90%;
         }
-        h1 { margin-bottom: 10px; font-weight: 800; letter-spacing: 1px; }
-        p { opacity: 0.8; margin-bottom: 30px; }
-        .btn-verify {
+        h1 { color: #00A2FF; margin-bottom: 10px; font-size: 24px; }
+        p { color: #ccc; font-size: 14px; line-height: 1.6; }
+        .code-box {
+            background: #000;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px dashed #00A2FF;
+            font-family: monospace;
+            font-size: 18px;
+            color: #00FF00;
+            margin: 20px 0;
+            letter-spacing: 2px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus { background: rgba(255,255,255,0.2); box-shadow: 0 0 10px #00A2FF; }
+        button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 8px;
             background: #00A2FF;
             color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
             font-weight: 600;
-            border-radius: 10px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            box-shadow: 0 5px 15px rgba(0, 162, 255, 0.4);
-            text-decoration: none;
-            display: inline-block;
+            transition: 0.3s;
         }
-        .btn-verify:hover {
-            background: #008bdb;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 162, 255, 0.6);
-        }
-        .hidden { display: none; }
-        .success-icon { color: #4BB543; font-size: 50px; margin-bottom: 20px; }
+        button:hover { background: #0082cc; transform: translateY(-2px); }
+        .footer { margin-top: 20px; font-size: 10px; color: #555; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <div class="container" id="verify-ui">
-        <h1>BUCKINGHAM RP</h1>
-        <p>Aby otrzymać dostęp do kanałów, musisz zweryfikować swoje konto Roblox.</p>
-        <button class="btn-verify" onclick="processVerification()">Zaloguj przez Roblox</button>
-    </div>
+<div class="container" id="verify-box">
+    <h1>BUCKINGHAM RP</h1>
+    <p>Aby połączyć konto, wklej poniższy kod do swojego profilu Roblox w sekcji <b>"O mnie" (About)</b>:</p>
+    
+    <div class="code-box" id="display-code">Ładowanie...</div>
+    
+    <p>Następnie wpisz swój nick z Robloxa:</p>
+    <input type="text" id="rbx-nick" placeholder="Twój nick na Roblox...">
+    
+    <button onclick="startVerify()">Zatwierdź weryfikację</button>
+    
+    <div class="footer">System weryfikacji v2.0</div>
+</div>
 
-    <div class="container hidden" id="success-ui">
-        <div class="success-icon">✓</div>
-        <h1>GOTOWE!</h1>
-        <p>Weryfikacja zakończona pomyślnie. Witaj, <span id="player-name" style="color: #00A2FF; font-weight: bold;"></span>!</p>
-        <p style="font-size: 0.8em;">Możesz już zamknąć tę kartę i wrócić na Discorda.</p>
-    </div>
+<script>
+    // Pobieramy ID Discorda z adresu URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const discordId = urlParams.get('id');
+    const status = urlParams.get('status');
+    const nick = urlParams.get('name');
 
-    <script>
-        // SPRAWDZANIE STATUSU PO POWROCIE
-        window.onload = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('status') === 'success') {
-                document.getElementById('verify-ui').classList.add('hidden');
-                document.getElementById('success-ui').classList.remove('hidden');
-                document.getElementById('player-name').innerText = urlParams.get('name');
-            }
-        };
+    if (status === 'success') {
+        document.getElementById('verify-box').innerHTML = `
+            <h1 style="color: #00FF00;">SUKCES!</h1>
+            <p>Konto <b>${nick}</b> zostało zweryfikowane.</p>
+            <p>Możesz już zamknąć tę stronę i wrócić na Discorda.</p>
+        `;
+    }
 
-        function processVerification() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const discordId = urlParams.get('id');
+    if (discordId) {
+        document.getElementById('display-code').innerText = `BCK-${discordId}`;
+    } else {
+        document.getElementById('display-code').innerText = "BŁĄD: Otwórz link z Discorda!";
+        document.getElementById('display-code').style.color = "red";
+    }
 
-            if (!discordId) {
-                alert("Błąd: Link musi zawierać Twoje ID Discorda! Kliknij link z bota.");
-                return;
-            }
+    function startVerify() {
+        const username = document.getElementById('rbx-nick').value;
+        if (!username) return alert("Wpisz swój nick!");
+        if (!discordId) return alert("Brak ID Discorda! Uruchom link ponownie z Discorda.");
+        
+        // Przekierowanie do API
+        window.location.href = `/api/verify?username=${username}&state=${discordId}`;
+    }
+</script>
 
-            // TWOJE DANE Z ROBLOX OAUTH2
-            const clientId = "5490810913407316280";
-            const redirect = encodeURIComponent("https://pbpr.vercel.app/api/verify");
-            
-            // Profesjonalne przekierowanie
-            const robloxUrl = `https://apis.roblox.com/oauth/v1/authorize?client_id=${clientId}&redirect_uri=${redirect}&scope=openid%20profile&response_type=code&state=${discordId}`;
-            
-            window.location.href = robloxUrl;
-        }
-    </script>
 </body>
 </html>
