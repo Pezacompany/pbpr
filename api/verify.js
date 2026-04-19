@@ -1,54 +1,51 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 
 export default async function handler(req, res) {
-    const { code, state } = req.query;
+    const { state, code_rbx } = req.query; // state to ID Discorda
 
-    const CLIENT_ID = "1495421531822624899"; 
-    const CLIENT_SECRET = process.env.ROBLOX_SECRET; 
     const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
-    const GUILD_ID = "1493713101151928340";
-    const ROLE_ID = "1494031035841777836";
-    const REDIRECT_URI = "https://pbpr.vercel.app/api/verify";
-    const LOG_CHANNEL_ID = "1495433566484562061"; // Tutaj bot będzie odbierał dane do bazy
+    const LOG_CHANNEL_ID = "1495433566484562061"; 
 
-    if (!code) return res.status(400).send("Błąd: Brak kodu.");
+    // Jeśli gracz dopiero wszedł (nie ma kodu z Robloxa w URL)
+    if (!req.query.username) {
+        return res.status(400).send("Brak nazwy użytkownika.");
+    }
+
+    const username = req.query.username;
 
     try {
-        const tokenRes = await fetch('https://apis.roblox.com/oauth/v1/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                client_id: CLIENT_ID,
-                client_secret: CLIENT_SECRET,
-                grant_type: 'authorization_code',
-                code: code,
-                redirect_uri: REDIRECT_URI
-            })
-        });
-        const tokens = await tokenRes.json();
+        // 1. Szukamy gracza na Roblox
+        const userRes = await fetch(`https://users.roblox.com/v1/users/search?keyword=${username}&limit=1`);
+        const userData = await userRes.json();
+        if (!userData.data.length) return res.status(404).send("Nie znaleziono gracza.");
         
-        const userRes = await fetch('https://apis.roblox.com/oauth/v1/userinfo', {
-            headers: { Authorization: `Bearer ${tokens.access_token}` }
-        });
-        const robloxUser = await userRes.json();
+        const rbxId = userData.data[0].id;
+        const realName = userData.data[0].name;
 
-        const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
-        await client.login(DISCORD_TOKEN);
-        
-        const guild = await client.guilds.fetch(GUILD_ID);
-        const member = await guild.members.fetch(state);
+        // 2. Pobieramy Bio gracza
+        const profileRes = await fetch(`https://users.roblox.com/v1/users/${rbxId}`);
+        const profileData = await profileRes.json();
+        const bio = profileData.description;
 
-        await member.roles.add(ROLE_ID);
-        await member.setNickname(`${robloxUser.preferred_username} | ✅`);
-
-        // WYSYŁANIE INFO DO BOTA (do bazy)
-        const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
-        await logChannel.send(`DB_SAVE|${state}|${robloxUser.preferred_username}`);
-
-        client.destroy();
-        return res.redirect(`/?status=success&name=${robloxUser.preferred_username}`);
+        // 3. Sprawdzamy czy w Bio jest ID Discorda (prosta weryfikacja)
+        // Gracz musi wpisać w Bio: "BCK-ID_DISCORDA"
+        if (bio && bio.includes(`BCK-${state}`)) {
+            
+            // Logujemy bota, żeby wysłał sygnał do bazy na IceHost
+            const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+            await client.login(DISCORD_TOKEN);
+            const channel = await client.channels.fetch(LOG_CHANNEL_ID);
+            
+            // Wysyłamy komendę do bota na IceHost
+            await channel.send(`DB_SAVE|${state}|${realName}`);
+            
+            client.destroy();
+            return res.redirect(`/?status=success&name=${realName}`);
+        } else {
+            return res.status(400).send(`Nie znaleziono kodu w Bio! Wpisz w swoim opisie na Roblox: BCK-${state}`);
+        }
 
     } catch (error) {
-        return res.status(500).send(`Błąd: ${error.message}`);
+        return res.status(500).send("Błąd: " + error.message);
     }
 }
