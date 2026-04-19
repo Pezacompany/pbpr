@@ -4,116 +4,254 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weryfikacja | Buckingham RP</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #00A2FF;
+            --accent: #00fbff;
+            --bg: #050505;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
-            background: radial-gradient(circle, #1a1a1a 0%, #0d0d0d 100%);
+            background-color: var(--bg);
             color: white;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            min-height: 100vh;
             overflow: hidden;
+            position: relative;
         }
+
+        /* Animowane Tło */
+        .bg-animate {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, #001a33 0%, #050505 100%);
+            z-index: -1;
+        }
+
+        .orb {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            filter: blur(150px);
+            border-radius: 50%;
+            opacity: 0.15;
+            animation: float 20s infinite alternate;
+        }
+
+        @keyframes float {
+            0% { transform: translate(-20%, -20%); }
+            100% { transform: translate(20%, 20%); }
+        }
+
         .container {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 50px 40px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.02);
             text-align: center;
-            max-width: 400px;
+            max-width: 450px;
             width: 90%;
+            z-index: 10;
+            animation: fadeIn 0.8s ease-out;
         }
-        h1 { color: #00A2FF; margin-bottom: 10px; font-size: 24px; }
-        p { color: #ccc; font-size: 14px; line-height: 1.6; }
-        .code-box {
-            background: #000;
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px dashed #00A2FF;
-            font-family: monospace;
-            font-size: 18px;
-            color: #00FF00;
-            margin: 20px 0;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 28px;
+            letter-spacing: 4px;
+            margin-bottom: 5px;
+            background: linear-gradient(to right, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--primary);
+            text-transform: uppercase;
             letter-spacing: 2px;
-        }
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            border-radius: 8px;
-            border: none;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            box-sizing: border-box;
-            outline: none;
-            transition: 0.3s;
-        }
-        input:focus { background: rgba(255,255,255,0.2); box-shadow: 0 0 10px #00A2FF; }
-        button {
-            width: 100%;
-            padding: 15px;
-            margin-top: 20px;
-            border: none;
-            border-radius: 8px;
-            background: #00A2FF;
-            color: white;
+            margin-bottom: 30px;
             font-weight: 600;
+        }
+
+        p {
+            color: #aaa;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .step-label {
+            display: block;
+            text-align: left;
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .code-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 162, 255, 0.3);
+            font-family: 'Montserrat', monospace;
+            font-size: 20px;
+            color: var(--accent);
+            margin-bottom: 25px;
+            position: relative;
             cursor: pointer;
             transition: 0.3s;
+            box-shadow: 0 0 15px rgba(0, 162, 255, 0.1);
         }
-        button:hover { background: #0082cc; transform: translateY(-2px); }
-        .footer { margin-top: 20px; font-size: 10px; color: #555; text-transform: uppercase; }
+
+        .code-box:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 25px rgba(0, 162, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        input {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 15px;
+            outline: none;
+            transition: 0.3s;
+            margin-bottom: 20px;
+        }
+
+        input:focus {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 162, 255, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.4s;
+            box-shadow: 0 10px 20px rgba(0, 162, 255, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 162, 255, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 9px;
+            color: #444;
+            letter-spacing: 2px;
+        }
+
+        /* Efekt sukcesu */
+        .success-icon {
+            font-size: 60px;
+            color: #00ff88;
+            margin-bottom: 20px;
+            display: block;
+        }
     </style>
 </head>
 <body>
 
+<div class="bg-animate">
+    <div class="orb"></div>
+</div>
+
 <div class="container" id="verify-box">
-    <h1>BUCKINGHAM RP</h1>
-    <p>Aby połączyć konto, wklej poniższy kod do swojego profilu Roblox w sekcji <b>"O mnie" (About)</b>:</p>
+    <h1>Buckingham</h1>
+    <div class="subtitle">Roleplay Experience</div>
     
-    <div class="code-box" id="display-code">Ładowanie...</div>
+    <span class="step-label">Krok 1: Kopiuj kod do Bio</span>
+    <div class="code-box" id="display-code" onclick="copyCode()">Ładowanie...</div>
     
-    <p>Następnie wpisz swój nick z Robloxa:</p>
+    <span class="step-label">Krok 2: Podaj nazwę użytkownika</span>
     <input type="text" id="rbx-nick" placeholder="Twój nick na Roblox...">
     
-    <button onclick="startVerify()">Zatwierdź weryfikację</button>
+    <button onclick="startVerify()">Zatwierdź Weryfikację</button>
     
-    <div class="footer">System weryfikacji v2.0</div>
+    <div class="footer">SECURITY SYSTEM V2.5 &copy; BUCKINGHAM</div>
 </div>
 
 <script>
-    // Pobieramy ID Discorda z adresu URL
     const urlParams = new URLSearchParams(window.location.search);
     const discordId = urlParams.get('id');
     const status = urlParams.get('status');
     const nick = urlParams.get('name');
 
+    // Obsługa sukcesu
     if (status === 'success') {
         document.getElementById('verify-box').innerHTML = `
-            <h1 style="color: #00FF00;">SUKCES!</h1>
-            <p>Konto <b>${nick}</b> zostało zweryfikowane.</p>
-            <p>Możesz już zamknąć tę stronę i wrócić na Discorda.</p>
+            <span class="success-icon">✓</span>
+            <h1>SUKCES</h1>
+            <div class="subtitle" style="color: #00ff88">Weryfikacja zakończona</div>
+            <p>Obywatel <b>${nick}</b> został pomyślnie dodany do bazy danych Buckingham RP.</p>
+            <p style="font-size: 12px; margin-top: 20px">Możesz teraz zamknąć to okno.</p>
         `;
     }
 
+    // Wyświetlanie kodu
     if (discordId) {
         document.getElementById('display-code').innerText = `BCK-${discordId}`;
     } else {
-        document.getElementById('display-code').innerText = "BŁĄD: Otwórz link z Discorda!";
-        document.getElementById('display-code').style.color = "red";
+        document.getElementById('display-code').innerText = "BŁĄD LINKU";
+        document.getElementById('display-code').style.color = "#ff4444";
+    }
+
+    function copyCode() {
+        const code = document.getElementById('display-code').innerText;
+        navigator.clipboard.writeText(code);
+        alert("Skopiowano kod do schowka!");
     }
 
     function startVerify() {
         const username = document.getElementById('rbx-nick').value;
         if (!username) return alert("Wpisz swój nick!");
-        if (!discordId) return alert("Brak ID Discorda! Uruchom link ponownie z Discorda.");
+        if (!discordId) return alert("Błąd: Brak ID Discorda.");
         
-        // Przekierowanie do API
         window.location.href = `/api/verify?username=${username}&state=${discordId}`;
     }
 </script>
