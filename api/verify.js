@@ -1,58 +1,67 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 
 export default async function handler(req, res) {
-    const { username, state } = req.query; 
+    const { username, state } = req.query; // username z inputa, state to ID Discorda
 
     const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
-    const LOG_CHANNEL_ID = "1495433566484562061"; // Upewnij się, że to ID jest poprawne!
+    const LOG_CHANNEL_ID = "1495433566484562061"; // <--- TUTAJ WPISZ ID KANAŁU Z TWOJEGO SERWERA
 
     if (!username || !state) {
-        return res.status(400).send("Błąd: Brak nicku lub ID Discorda w zapytaniu.");
+        return res.status(400).send("Błąd: Brak nicku lub ID Discorda.");
     }
 
     try {
-        // 1. Szukamy użytkownika na Roblox
-        const userSearchRes = await fetch(`https://users.roblox.com/v1/users/search?keyword=${encodeURIComponent(username)}&limit=1`);
+        // 1. Szukamy użytkownika na Roblox (Metoda dokładna - POST)
+        const userSearchRes = await fetch(`https://users.roblox.com/v1/usernames/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                usernames: [username],
+                excludeBannedUsers: true
+            })
+        });
+        
         const searchData = await userSearchRes.json();
 
-        // ZABEZPIECZENIE PRZED BŁĘDEM "length of undefined"
-        if (!searchData || !searchData.data || searchData.data.length === 0) {
-            return res.status(404).send(`Nie znaleziono użytkownika o nicku "${username}" na Roblox. Sprawdź pisownię!`);
+        if (!searchData.data || searchData.data.length === 0) {
+            return res.status(404).send(`Nie znaleziono gracza o nicku "${username}". Upewnij się, że wpisujesz nazwę użytkownika (z @), a nie nazwę wyświetlaną (Display Name)!`);
         }
 
         const rbxId = searchData.data[0].id;
-        const rbxRealName = searchData.data[0].name;
+        const rbxRealName = searchData.data[0].name; // Oficjalny Username
 
         // 2. Pobieramy opis (Bio) tego użytkownika
         const userProfileRes = await fetch(`https://users.roblox.com/v1/users/${rbxId}`);
         const profileData = await userProfileRes.json();
-        
-        if (!profileData || !profileData.description && profileData.description !== "") {
-            return res.status(500).send("Błąd: Nie udało się pobrać opisu profilu z Roblox.");
-        }
+        const bio = profileData.description || "";
 
-        const bio = profileData.description;
+        // 3. Sprawdzamy czy w bio jest poprawny kod
         const expectedCode = `BCK-${state}`;
 
-        // 3. Sprawdzamy kod w Bio
         if (bio.includes(expectedCode)) {
+            // SUKCES - Łączymy się z Discordem, żeby wysłać sygnał do bota na IceHost
             const client = new Client({ intents: [GatewayIntentBits.Guilds] });
             await client.login(DISCORD_TOKEN);
             
             const channel = await client.channels.fetch(LOG_CHANNEL_ID);
-            if (!channel) throw new Error("Nie znaleziono kanału logów. Sprawdź ID!");
+            if (!channel) {
+                return res.status(500).send("Błąd: Nie znaleziono kanału logów na Discordzie.");
+            }
 
-            // Sygnał do bota na IceHost
+            // Wysyłamy sygnał DB_SAVE, który odbierze Twój bot na IceHost
             await channel.send(`DB_SAVE|${state}|${rbxRealName}`);
             
             client.destroy();
+
+            // Przekierowanie na stronę z komunikatem sukcesu
             return res.redirect(`/?status=success&name=${rbxRealName}`);
         } else {
-            return res.status(400).send(`Błąd: Nie znaleziono kodu "${expectedCode}" w Twoim opisie profilu. Obecnie Twój opis to: "${bio || "Pusty"}"`);
+            // BŁĄD - Kod nie pasuje
+            return res.status(400).send(`Nie znaleziono kodu "${expectedCode}" w Twoim opisie na Roblox. Obecnie Twój opis to: "${bio || "Pusty"}"`);
         }
 
     } catch (error) {
-        console.error("LOG BŁĘDU:", error);
-        return res.status(500).send(`Wystąpił błąd: ${error.message}`);
+        console.error("Błąd weryfikacji:", error);
+        return res.status(500).send("Wystąpił błąd podczas weryfikacji: " + error.message);
     }
 }
