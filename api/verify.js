@@ -3,14 +3,14 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const discordClient = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
 
 export default async function handler(req, res) {
-    const { code, state } = req.query; // state = ID Discorda użytkownika
+    const { code, state } = req.query;
 
-    // DANE Z TWOICH SCREENÓW
     const CLIENT_ID = "5490810913407316280"; 
-    const CLIENT_SECRET = "RBX-xY9CFNjaMEuqnxQCWYiPUdVe8SXxzNZr53LTNrUbEsyEDRQnPFgoIDfR5fmkYN6n"; 
-    const REDIRECT_URI = "https://pbpr.vercel.app/api/verify";
+    // ZBIERAMY WSZYSTKO Z "SEJFU" (Environment Variables)
+    const CLIENT_SECRET = process.env.ROBLOX_SECRET; 
+    const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
     
-    const TOKEN = process.env.DISCORD_TOKEN;
+    const REDIRECT_URI = "https://pbpr.vercel.app/api/verify";
     const GUILD_ID = "1493713101151928340";
     const ROLE_ID = "1494031035841777836";
 
@@ -38,18 +38,17 @@ export default async function handler(req, res) {
         const robloxUser = await userRes.json();
 
         // 3. Nadanie rangi na Discordzie
-        await discordClient.login(DISCORD_TOKEN);
+        await discordClient.login(DISCORD_TOKEN); // Teraz nazwa się zgadza
         const guild = await discordClient.guilds.fetch(GUILD_ID);
         const member = await guild.members.fetch(state);
 
         await member.roles.add(ROLE_ID);
         await member.setNickname(`${robloxUser.preferred_username} | ✅`);
 
-        // 4. Sukces - powrót na stronę z komunikatem
         res.redirect(`/?status=success&name=${robloxUser.preferred_username}`);
 
     } catch (error) {
         console.error(error);
-        res.status(500).send("Wystąpił błąd podczas weryfikacji.");
+        res.status(500).send("Wystąpił błąd podczas weryfikacji. Sprawdź czy Secret i Token są w Environment Variables!");
     }
 }
