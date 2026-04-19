@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     const CLIENT_SECRET = "RBX-xY9CFNjaMEuqnxQCWYiPUdVe8SXxzNZr53LTNrUbEsyEDRQnPFgoIDfR5fmkYN6n"; 
     const REDIRECT_URI = "https://pbpr.vercel.app/api/verify";
     
-    const DISCORD_TOKEN = "MTQ5NTQyMTUzMTgyMjYyNDg5OQ.GztIRR.OLFH697JoJ8X_D_A4AZ_ptdu_lQ884m5X3RLjc";
+    const TOKEN = process.env.DISCORD_TOKEN;
     const GUILD_ID = "1493713101151928340";
     const ROLE_ID = "1494031035841777836";
 
