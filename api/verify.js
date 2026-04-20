@@ -1,48 +1,33 @@
-const { Client, GatewayIntentBits } = require('discord.js');
-
 export default async function handler(req, res) {
-    const { username, state } = req.query;
-    const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
-    const LOG_CHANNEL_ID = "1495433566484562061";
-
-    if (!username || !state) {
-        return res.redirect(`/?id=${state}&status=error&msg=Brak danych (nick/ID).`);
-    }
+    const { username, state, charName, age, origin } = req.query;
+    const LOG_CHANNEL_ID = "1495793897451028592";
 
     try {
-        const userSearchRes = await fetch(`https://users.roblox.com/v1/usernames/users`, {
+        const userRes = await fetch(`https://users.roblox.com/v1/usernames/users`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ usernames: [username], excludeBannedUsers: true })
+            body: JSON.stringify({ usernames: [username] })
         });
-        const searchData = await userSearchRes.json();
+        const userData = await userRes.json();
+        if (!userData.data[0]) return res.redirect(`/?id=${state}&status=error&msg=Nie znaleziono gracza.`);
 
-        if (!searchData.data || searchData.data.length === 0) {
-            return res.redirect(`/?id=${state}&status=error&msg=Nie znaleziono gracza ${username}.`);
-        }
+        const rbxId = userData.data[0].id;
+        const profileRes = await fetch(`https://users.roblox.com/v1/users/${rbxId}`);
+        const profile = await profileRes.json();
 
-        const rbxId = searchData.data[0].id;
-        const rbxRealName = searchData.data[0].name;
-
-        const userProfileRes = await fetch(`https://users.roblox.com/v1/users/${rbxId}`);
-        const profileData = await userProfileRes.json();
-        const bio = profileData.description || "";
-        const expectedCode = `BCK-${state}`;
-
-        if (bio.includes(expectedCode)) {
-            const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-            await client.login(DISCORD_TOKEN);
-            const channel = await client.channels.fetch(LOG_CHANNEL_ID);
-            
-            await channel.send(`DB_SAVE|${state}|${rbxRealName}|${rbxId}`);
-            client.destroy();
-
-            return res.redirect(`/?status=success&name=${rbxRealName}`);
+        if (profile.description.includes(`BCK-${state}`)) {
+            // Sygnał do bota na Discord (Baza Danych)
+            const DISCORD_WEBHOOK = process.env.DB_WEBHOOK; 
+            await fetch(DISCORD_WEBHOOK, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: `DATA_ID|DC:${state}|RBX:${rbxId}|SLOT:1|P1[${charName}|${age}|${origin}|Obywatel / Turysta]|P2[Brak|N/A|N/A|Brak]|EXIT:null`
+                })
+            });
+            return res.redirect(`/?status=success`);
         } else {
-            return res.redirect(`/?id=${state}&status=error&msg=Nie znaleziono kodu w Bio!`);
+            return res.redirect(`/?id=${state}&status=error&msg=Błędny kod w Bio.`);
         }
-
-    } catch (error) {
-        return res.redirect(`/?id=${state}&status=error&msg=Błąd serwera. Spróbuj później.`);
-    }
+    } catch (e) { res.redirect(`/?id=${state}&status=error&msg=Błąd API.`); }
 }
