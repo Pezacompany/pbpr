@@ -2,75 +2,63 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kreator Postaci | Buckingham RP</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Buckingham RP | Kreator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #00A2FF; --accent: #00fbff; --bg: #0a0a0a; }
-        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .background { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://cdn.discordapp.com/attachments/1493713102368280680/1494050832533164155/image.png'); background-size: cover; z-index: -1; }
-        .container { background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); padding: 40px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 500px; text-align: center; }
-        .step { display: none; } .step.active { display: block; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        h1 { font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white; }
-        .btn { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: 700; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
-        .btn:hover { background: var(--accent); transform: translateY(-2px); }
-        .code-box { background: rgba(0,0,0,0.5); padding: 20px; border-radius: 10px; border: 1px dashed var(--primary); font-size: 22px; margin-bottom: 20px; letter-spacing: 3px; }
+        body { font-family: 'Poppins', sans-serif; background: radial-gradient(circle, #1a1a2e 0%, #16213e 100%); color: white; overflow: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; }
+        .btn-pro { background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%); transition: 0.3s; }
+        .btn-pro:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 210, 255, 0.3); }
+        .input-pro { background: rgba(0,0,0,0.3); border: 1px solid #3a7bd5; border-radius: 10px; padding: 12px; width: 100%; outline: none; }
     </style>
 </head>
-<body>
-<div class="background"></div>
-<div class="container">
-    <h1>Buckingham RP</h1>
-    
-    <div class="step active" id="step1">
-        <p>Skopiuj kod do Bio na Roblox:</p>
-        <div class="code-box" id="display-code">Ładowanie...</div>
-        <button class="btn" onclick="nextStep(2)">Wkleiłem, Dalej</button>
+<body class="flex items-center justify-center h-screen">
+    <div class="glass p-10 w-full max-w-md text-center shadow-2xl">
+        <h1 class="text-3xl font-bold mb-2">Buckingham RP</h1>
+        <p class="text-gray-400 mb-8">Kreator Obywatelstwa</p>
+
+        <div id="step1">
+            <input type="text" id="rbxNick" placeholder="Twój Nick Roblox" class="input-pro mb-4">
+            <button onclick="verify()" class="btn-pro w-full py-3 rounded-lg font-bold">WERYFIKUJ KOD</button>
+        </div>
+
+        <div id="step2" class="hidden text-left">
+            <input type="text" id="fullName" placeholder="Imię i Nazwisko IC" class="input-pro mb-3">
+            <input type="number" id="age" placeholder="Wiek" class="input-pro mb-3">
+            <input type="text" id="origin" placeholder="Pochodzenie" class="input-pro mb-6">
+            <button onclick="finish()" class="btn-pro w-full py-3 rounded-lg font-bold">STWÓRZ POSTAĆ</button>
+        </div>
     </div>
 
-    <div class="step" id="step2">
-        <h3>Kreator Obywatela</h3>
-        <p style="font-size: 11px; color: var(--accent);">Wybierz dane z oficjalnej listy serwerowej</p>
-        <input type="text" id="rbx-nick" placeholder="Nick Roblox (Username)">
-        <input type="text" id="rp-name" placeholder="Imię i Nazwisko (z listy)">
-        <input type="number" id="rp-age" placeholder="Wiek postaci">
-        <input type="text" id="rp-origin" placeholder="Pochodzenie (z listy)">
-        <button class="btn" onclick="finish()">Stwórz Postać</button>
-    </div>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const discordId = params.get('id');
 
-    <div id="status-box"></div>
-</div>
+        async function verify() {
+            const nick = document.getElementById('rbxNick').value;
+            // Tutaj logika sprawdzania kodu z opisu Roblox przez Proxy/API
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+        }
 
-<script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const discordId = urlParams.get('id');
-    if(discordId) document.getElementById('display-code').innerText = `BCK-${discordId}`;
+        async function finish() {
+            const data = {
+                discordId,
+                robloxNick: document.getElementById('rbxNick').value,
+                robloxId: "123456", // Tu pobrane ID z Roblox
+                name: document.getElementById('fullName').value,
+                age: document.getElementById('age').value,
+                origin: document.getElementById('origin').value
+            };
 
-    function nextStep(s) {
-        document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-        document.getElementById('step'+s).classList.add('active');
-    }
-
-    function finish() {
-        const data = {
-            username: document.getElementById('rbx-nick').value,
-            charName: document.getElementById('rp-name').value,
-            age: document.getElementById('rp-age').value,
-            origin: document.getElementById('rp-origin').value,
-            state: discordId
-        };
-        if(!data.username || !data.charName || !data.age || !data.origin) return alert("Uzupełnij wszystko!");
-        window.location.href = `/api/verify?${new URLSearchParams(data).toString()}`;
-    }
-
-    if(urlParams.get('status')) {
-        document.getElementById('step1').classList.remove('active');
-        const box = document.getElementById('status-box');
-        if(urlParams.get('status') === 'success') box.innerHTML = "<h2>✅ GOTOWE</h2><p>Postać stworzona!</p>";
-        else box.innerHTML = `<h2 style='color:red'>❌ BŁĄD</h2><p>${urlParams.get('msg')}</p>`;
-    }
-</script>
+            await fetch('http://TWOJE_IP_ICEHOST:3000/api/verify', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            alert("Postać stworzona! Możesz wejść na serwer.");
+        }
+    </script>
 </body>
 </html>
