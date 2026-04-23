@@ -1,34 +1,26 @@
 export default async function handler(req, res) {
     const { username, state, charName, age, origin } = req.query;
-    const BOT_URL = "http://83.168.94.244:40015"; // TWÓJ ADRES ICEHOST
+    const BOT_URL = "http://83.168.94.244:40015";
 
     try {
-        // 1. Pobierz kod jaki bot wygenerował dla tego użytkownika
         const codeRes = await fetch(`${BOT_URL}/api/getcode/${state}`);
         const codeData = await codeRes.json();
-        
-        if (!codeData.code) {
-            return res.status(400).send("<h1>Błąd: Najpierw wygeneruj kod na Discordzie!</h1>");
-        }
-        const expectedCode = codeData.code;
+        if (!codeData.code) return res.status(400).send("Najpierw wygeneruj kod na Discordzie!");
 
-        // 2. Pobierz dane z Roblox
         const userRes = await fetch(`https://users.roblox.com/v1/usernames/users`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ usernames: [username] })
         });
         const userData = await userRes.json();
-        const rbxId = userData.data[0].id;
+        if (!userData.data[0]) return res.status(404).send("Użytkownik Roblox nie istnieje.");
 
+        const rbxId = userData.data[0].id;
         const profileRes = await fetch(`https://users.roblox.com/v1/users/${rbxId}`);
         const profile = await profileRes.json();
 
-        // 3. Sprawdź czy kod się zgadza
-        if (profile.description && profile.description.includes(expectedCode)) {
-            
-            // 4. Zatwierdź w bocie
-            await fetch(`${BOT_URL}/api/verify`, {
+        if (profile.description && profile.description.includes(codeData.code)) {
+            const final = await fetch(`${BOT_URL}/api/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -40,12 +32,12 @@ export default async function handler(req, res) {
                     origin: origin
                 })
             });
-
-            return res.send("<h1>✅ SUKCES! Postać stworzona. Wróc na Discord.</h1>");
+            if (final.ok) return res.status(200).send("OK");
+            else return res.status(500).send("Bot na IceHost nie odpowiada.");
         } else {
-            return res.status(403).send(`<h1>❌ BŁĄD!</h1><p>W opisie profilu Roblox musi być kod: <b>${expectedCode}</b></p>`);
+            return res.status(403).send(`Brak kodu <b>${codeData.code}</b> w opisie profilu.`);
         }
     } catch (e) {
-        return res.status(500).send("<h1>Błąd połączenia z botem. Sprawdź czy bot na IceHost działa.</h1>");
+        return res.status(500).send("Błąd serwera: " + e.message);
     }
 }
