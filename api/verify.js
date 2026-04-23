@@ -1,27 +1,37 @@
 export default async function handler(req, res) {
     const { username, state, charName, age, origin } = req.query;
     
-    // TWOJE DANE Z PANELU ICEHOST
+    // TWOJE IP I PORT Z PANELU ICEHOST
     const BOT_URL = "http://83.168.94.244:40015/api/verify";
 
+    if (!username || !state) {
+        return res.status(400).send("Błąd: Brak danych użytkownika.");
+    }
+
     try {
-        // 1. Pobieranie danych z Roblox
-        const userRes = await fetch(`https://users.roblox.com/v1/usernames/users`, {
+        // 1. Pobierz ID użytkownika Roblox
+        const rbxUserRes = await fetch(`https://users.roblox.com/v1/usernames/users`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ usernames: [username] })
         });
-        const userData = await userRes.json();
-        const rbxId = userData.data[0].id;
+        const rbxUserData = await rbxUserRes.json();
 
+        if (!rbxUserData.data || rbxUserData.data.length === 0) {
+            return res.status(404).send("Nie znaleziono gracza o takim nicku.");
+        }
+
+        const rbxId = rbxUserData.data[0].id;
+
+        // 2. Pobierz profil (opis), aby sprawdzić kod
         const profileRes = await fetch(`https://users.roblox.com/v1/users/${rbxId}`);
-        const profile = await profileRes.json();
+        const profileData = await profileRes.json();
 
-        // 2. Weryfikacja kodu w opisie (musi być BK-KOD)
-        if (profile.description.includes(`BK-${state}`)) {
+        // Weryfikacja kodu BK-XXXXXX
+        if (profileData.description && profileData.description.includes(`BK-${state}`)) {
             
-            // 3. Przesłanie danych do bota na IceHost
-            const botResponse = await fetch(BOT_URL, {
+            // 3. Wyślij dane do bota na IceHost
+            const botRes = await fetch(BOT_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -34,15 +44,18 @@ export default async function handler(req, res) {
                 })
             });
 
-            if (botResponse.ok) {
-                return res.redirect(`/?status=success`);
+            if (botRes.ok) {
+                return res.send("<h1>Sukces! Postać utworzona. Zamknij tę stronę i wróć do Discorda.</h1>");
             } else {
-                return res.redirect(`/?id=${state}&status=error&msg=Bot na IceHost nie odpowiada!`);
+                return res.status(500).send("Błąd: Bot nie odpowiedział. Sprawdź czy jest włączony na IceHost.");
             }
+
         } else {
-            return res.redirect(`/?id=${state}&status=error&msg=Kod w opisie profilu jest błędny!`);
+            return res.status(403).send("<h1>Błąd weryfikacji! Kod w opisie Twojego profilu Roblox nie zgadza się lub go brakuje.</h1>");
         }
-    } catch (e) {
-        return res.redirect(`/?status=error&msg=Błąd komunikacji z API`);
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send("Błąd krytyczny serwera weryfikacji.");
     }
 }
