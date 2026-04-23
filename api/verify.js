@@ -1,61 +1,49 @@
-export default async function handler(req, res) {
-    const { username, state, charName, age, origin } = req.query;
-    
-    // TWOJE IP I PORT Z PANELU ICEHOST
-    const BOT_URL = "http://83.168.94.244:40015/api/verify";
-
-    if (!username || !state) {
-        return res.status(400).send("Błąd: Brak danych użytkownika.");
-    }
-
-    try {
-        // 1. Pobierz ID użytkownika Roblox
-        const rbxUserRes = await fetch(`https://users.roblox.com/v1/usernames/users`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ usernames: [username] })
-        });
-        const rbxUserData = await rbxUserRes.json();
-
-        if (!rbxUserData.data || rbxUserData.data.length === 0) {
-            return res.status(404).send("Nie znaleziono gracza o takim nicku.");
-        }
-
-        const rbxId = rbxUserData.data[0].id;
-
-        // 2. Pobierz profil (opis), aby sprawdzić kod
-        const profileRes = await fetch(`https://users.roblox.com/v1/users/${rbxId}`);
-        const profileData = await profileRes.json();
-
-        // Weryfikacja kodu BK-XXXXXX
-        if (profileData.description && profileData.description.includes(`BK-${state}`)) {
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Kreator Postaci</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background-color: #0f1113; color: white; }</style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="bg-[#1a1d21] p-8 rounded-lg w-full max-w-sm border border-gray-800 shadow-2xl">
+        <h2 class="text-xl font-bold mb-6 text-center border-b border-gray-700 pb-4">WERYFIKACJA</h2>
+        
+        <form action="/api/verify" method="GET" class="space-y-4">
             
-            // 3. Wyślij dane do bota na IceHost
-            const botRes = await fetch(BOT_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    discordId: state,
-                    robloxId: rbxId.toString(),
-                    robloxNick: username,
-                    name: charName,
-                    age: age,
-                    origin: origin
-                })
-            });
+            <input type="hidden" name="state" id="discordIdInput">
 
-            if (botRes.ok) {
-                return res.send("<h1>Sukces! Postać utworzona. Zamknij tę stronę i wróć do Discorda.</h1>");
-            } else {
-                return res.status(500).send("Błąd: Bot nie odpowiedział. Sprawdź czy jest włączony na IceHost.");
-            }
+            <div>
+                <label class="block text-xs text-gray-500 uppercase mb-1">Nick Roblox (dokładny)</label>
+                <input type="text" name="username" required class="w-full p-2 bg-black border border-gray-700 rounded outline-none focus:border-gray-400">
+            </div>
 
-        } else {
-            return res.status(403).send("<h1>Błąd weryfikacji! Kod w opisie Twojego profilu Roblox nie zgadza się lub go brakuje.</h1>");
-        }
+            <div>
+                <label class="block text-xs text-gray-500 uppercase mb-1">Imię i Nazwisko Postaci</label>
+                <input type="text" name="charName" required class="w-full p-2 bg-black border border-gray-700 rounded outline-none focus:border-gray-400">
+            </div>
 
-    } catch (error) {
-        console.error(error);
-        return res.status(500).send("Błąd krytyczny serwera weryfikacji.");
-    }
-}
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-500 uppercase mb-1">Wiek</label>
+                    <input type="number" name="age" required class="w-full p-2 bg-black border border-gray-700 rounded outline-none focus:border-gray-400">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500 uppercase mb-1">Pochodzenie</label>
+                    <input type="text" name="origin" required class="w-full p-2 bg-black border border-gray-700 rounded outline-none focus:border-gray-400">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full py-3 mt-4 bg-white text-black font-bold rounded hover:bg-gray-300 transition">
+                ZATWIERDŹ POSTAĆ
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        document.getElementById('discordIdInput').value = urlParams.get('id');
+    </script>
+</body>
+</html>
