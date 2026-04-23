@@ -2,62 +2,60 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Buckingham RP | Kreator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buckingham Verification</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Poppins', sans-serif; background: radial-gradient(circle, #1a1a2e 0%, #16213e 100%); color: white; overflow: hidden; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; }
-        .btn-pro { background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%); transition: 0.3s; }
-        .btn-pro:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 210, 255, 0.3); }
-        .input-pro { background: rgba(0,0,0,0.3); border: 1px solid #3a7bd5; border-radius: 10px; padding: 12px; width: 100%; outline: none; }
+        body { background-color: #0f1113; color: #e1e1e1; font-family: sans-serif; }
+        .card { background-color: #1a1d21; border: 1px solid #2d3136; }
+        input { background-color: #0f1113; border: 1px solid #2d3136; color: white; }
+        button { background-color: #ffffff; color: #000000; transition: 0.2s; }
+        button:hover { background-color: #cccccc; }
     </style>
 </head>
-<body class="flex items-center justify-center h-screen">
-    <div class="glass p-10 w-full max-w-md text-center shadow-2xl">
-        <h1 class="text-3xl font-bold mb-2">Buckingham RP</h1>
-        <p class="text-gray-400 mb-8">Kreator Obywatelstwa</p>
-
+<body class="flex items-center justify-center min-h-screen">
+    <div class="card p-8 rounded-lg w-full max-w-sm">
+        <h2 class="text-xl font-bold mb-6 text-center border-b border-gray-700 pb-4">WERYFIKACJA OBYWATELSTWA</h2>
+        
         <div id="step1">
-            <input type="text" id="rbxNick" placeholder="Twój Nick Roblox" class="input-pro mb-4">
-            <button onclick="verify()" class="btn-pro w-full py-3 rounded-lg font-bold">WERYFIKUJ KOD</button>
+            <label class="block text-xs uppercase mb-2 text-gray-500">Nick Roblox</label>
+            <input type="text" id="nick" class="w-full p-2 rounded mb-4 outline-none">
+            <button onclick="next()" class="w-full p-2 rounded font-bold">KONTYNUUJ</button>
         </div>
 
-        <div id="step2" class="hidden text-left">
-            <input type="text" id="fullName" placeholder="Imię i Nazwisko IC" class="input-pro mb-3">
-            <input type="number" id="age" placeholder="Wiek" class="input-pro mb-3">
-            <input type="text" id="origin" placeholder="Pochodzenie" class="input-pro mb-6">
-            <button onclick="finish()" class="btn-pro w-full py-3 rounded-lg font-bold">STWÓRZ POSTAĆ</button>
+        <div id="step2" class="hidden">
+            <label class="block text-xs uppercase mb-2 text-gray-500">Imię i Nazwisko IC</label>
+            <input type="text" id="name" class="w-full p-2 rounded mb-3 outline-none">
+            <label class="block text-xs uppercase mb-2 text-gray-500">Wiek</label>
+            <input type="number" id="age" class="w-full p-2 rounded mb-3 outline-none">
+            <label class="block text-xs uppercase mb-2 text-gray-500">Pochodzenie</label>
+            <input type="text" id="origin" class="w-full p-2 rounded mb-6 outline-none">
+            <button onclick="submit()" class="w-full p-2 rounded font-bold">ZATWIERDŹ POSTAĆ</button>
         </div>
     </div>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const discordId = params.get('id');
-
-        async function verify() {
-            const nick = document.getElementById('rbxNick').value;
-            // Tutaj logika sprawdzania kodu z opisu Roblox przez Proxy/API
+        const discordId = new URLSearchParams(window.location.search).get('id');
+        function next() {
+            if(!document.getElementById('nick').value) return;
             document.getElementById('step1').classList.add('hidden');
             document.getElementById('step2').classList.remove('hidden');
         }
-
-        async function finish() {
+        async function submit() {
             const data = {
                 discordId,
-                robloxNick: document.getElementById('rbxNick').value,
-                robloxId: "123456", // Tu pobrane ID z Roblox
-                name: document.getElementById('fullName').value,
+                robloxNick: document.getElementById('nick').value,
+                robloxId: "0", // Tu wstaw logiczne pobieranie ID przez proxy jeśli potrzebujesz
+                name: document.getElementById('name').value,
                 age: document.getElementById('age').value,
                 origin: document.getElementById('origin').value
             };
-
             await fetch('http://TWOJE_IP_ICEHOST:3000/api/verify', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
             });
-            alert("Postać stworzona! Możesz wejść na serwer.");
+            alert("Zakończono. Możesz zamknąć kartę.");
         }
     </script>
 </body>
