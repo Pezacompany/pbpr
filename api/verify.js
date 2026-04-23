@@ -1,31 +1,34 @@
 export default async function handler(req, res) {
     const { username, state, charName, age, origin } = req.query;
-    
-    // TWOJE DOKŁADNE DANE Z ICEHOST
-    const BOT_URL = "http://83.168.94.244:40015/api/verify";
+    const BOT_URL = "http://83.168.94.244:40015"; // TWÓJ ADRES ICEHOST
 
     try {
-        // 1. Pobieranie ID Roblox
+        // 1. Pobierz kod jaki bot wygenerował dla tego użytkownika
+        const codeRes = await fetch(`${BOT_URL}/api/getcode/${state}`);
+        const codeData = await codeRes.json();
+        
+        if (!codeData.code) {
+            return res.status(400).send("<h1>Błąd: Najpierw wygeneruj kod na Discordzie!</h1>");
+        }
+        const expectedCode = codeData.code;
+
+        // 2. Pobierz dane z Roblox
         const userRes = await fetch(`https://users.roblox.com/v1/usernames/users`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ usernames: [username] })
         });
         const userData = await userRes.json();
-        
-        if (!userData.data || userData.data.length === 0) {
-            return res.status(404).send(`<body style="background:#0f1113;color:white;text-align:center;padding:50px;font-family:sans-serif;"><h1>❌ Błąd: Nie znaleziono konta Roblox o nicku: ${username}</h1></body>`);
-        }
         const rbxId = userData.data[0].id;
 
-        // 2. Pobieranie opisu konta Roblox i szukanie kodu BK-
         const profileRes = await fetch(`https://users.roblox.com/v1/users/${rbxId}`);
         const profile = await profileRes.json();
 
-        if (profile.description && profile.description.includes(`BK-${state}`)) {
+        // 3. Sprawdź czy kod się zgadza
+        if (profile.description && profile.description.includes(expectedCode)) {
             
-            // 3. Wysłanie danych do IceHost
-            const botRes = await fetch(BOT_URL, {
+            // 4. Zatwierdź w bocie
+            await fetch(`${BOT_URL}/api/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -38,16 +41,11 @@ export default async function handler(req, res) {
                 })
             });
 
-            if (botRes.ok) {
-                return res.send(`<body style="background:#0f1113;color:white;text-align:center;padding:50px;font-family:sans-serif;"><h1>✅ Weryfikacja zakończona sukcesem!</h1><p>Twoja postać została stworzona. Możesz zamknąć tę kartę i wrócić na Discorda.</p></body>`);
-            } else {
-                return res.status(500).send(`<body style="background:#0f1113;color:white;text-align:center;padding:50px;font-family:sans-serif;"><h1>❌ Błąd: Bot Discord zablokował połączenie (nie odpowiada na porcie 40015).</h1></body>`);
-            }
-
+            return res.send("<h1>✅ SUKCES! Postać stworzona. Wróc na Discord.</h1>");
         } else {
-            return res.status(403).send(`<body style="background:#0f1113;color:white;text-align:center;padding:50px;font-family:sans-serif;"><h1>❌ Błąd: Kod z Discorda nie znajduje się w opisie Twojego profilu Roblox.</h1><p>Wklej kod BK-... do opisu i spróbuj ponownie.</p></body>`);
+            return res.status(403).send(`<h1>❌ BŁĄD!</h1><p>W opisie profilu Roblox musi być kod: <b>${expectedCode}</b></p>`);
         }
-    } catch (error) {
-        return res.status(500).send(`<body style="background:#0f1113;color:white;text-align:center;padding:50px;font-family:sans-serif;"><h1>❌ Błąd komunikacji Vercel -> Roblox API</h1></body>`);
+    } catch (e) {
+        return res.status(500).send("<h1>Błąd połączenia z botem. Sprawdź czy bot na IceHost działa.</h1>");
     }
 }
