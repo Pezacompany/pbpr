@@ -1,49 +1,53 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <title>Kreator Postaci</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #0f1113; color: white; }</style>
-</head>
-<body class="flex items-center justify-center min-h-screen">
-    <div class="bg-[#1a1d21] p-8 rounded-lg w-full max-w-sm border border-gray-800 shadow-2xl">
-        <h2 class="text-xl font-bold mb-6 text-center border-b border-gray-700 pb-4">WERYFIKACJA</h2>
+export default async function handler(req, res) {
+    const { username, state, charName, age, origin } = req.query;
+    
+    // TWOJE DOKŁADNE DANE Z ICEHOST
+    const BOT_URL = "http://83.168.94.244:40015/api/verify";
+
+    try {
+        // 1. Pobieranie ID Roblox
+        const userRes = await fetch(`https://users.roblox.com/v1/usernames/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usernames: [username] })
+        });
+        const userData = await userRes.json();
         
-        <form action="/api/verify" method="GET" class="space-y-4">
+        if (!userData.data || userData.data.length === 0) {
+            return res.status(404).send(`<body style="background:#0f1113;color:white;text-align:center;padding:50px;font-family:sans-serif;"><h1>❌ Błąd: Nie znaleziono konta Roblox o nicku: ${username}</h1></body>`);
+        }
+        const rbxId = userData.data[0].id;
+
+        // 2. Pobieranie opisu konta Roblox i szukanie kodu BK-
+        const profileRes = await fetch(`https://users.roblox.com/v1/users/${rbxId}`);
+        const profile = await profileRes.json();
+
+        if (profile.description && profile.description.includes(`BK-${state}`)) {
             
-            <input type="hidden" name="state" id="discordIdInput">
+            // 3. Wysłanie danych do IceHost
+            const botRes = await fetch(BOT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    discordId: state,
+                    robloxId: rbxId.toString(),
+                    robloxNick: username,
+                    name: charName,
+                    age: age,
+                    origin: origin
+                })
+            });
 
-            <div>
-                <label class="block text-xs text-gray-500 uppercase mb-1">Nick Roblox (dokładny)</label>
-                <input type="text" name="username" required class="w-full p-2 bg-black border border-gray-700 rounded outline-none focus:border-gray-400">
-            </div>
+            if (botRes.ok) {
+                return res.send(`<body style="background:#0f1113;color:white;text-align:center;padding:50px;font-family:sans-serif;"><h1>✅ Weryfikacja zakończona sukcesem!</h1><p>Twoja postać została stworzona. Możesz zamknąć tę kartę i wrócić na Discorda.</p></body>`);
+            } else {
+                return res.status(500).send(`<body style="background:#0f1113;color:white;text-align:center;padding:50px;font-family:sans-serif;"><h1>❌ Błąd: Bot Discord zablokował połączenie (nie odpowiada na porcie 40015).</h1></body>`);
+            }
 
-            <div>
-                <label class="block text-xs text-gray-500 uppercase mb-1">Imię i Nazwisko Postaci</label>
-                <input type="text" name="charName" required class="w-full p-2 bg-black border border-gray-700 rounded outline-none focus:border-gray-400">
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs text-gray-500 uppercase mb-1">Wiek</label>
-                    <input type="number" name="age" required class="w-full p-2 bg-black border border-gray-700 rounded outline-none focus:border-gray-400">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-500 uppercase mb-1">Pochodzenie</label>
-                    <input type="text" name="origin" required class="w-full p-2 bg-black border border-gray-700 rounded outline-none focus:border-gray-400">
-                </div>
-            </div>
-
-            <button type="submit" class="w-full py-3 mt-4 bg-white text-black font-bold rounded hover:bg-gray-300 transition">
-                ZATWIERDŹ POSTAĆ
-            </button>
-        </form>
-    </div>
-
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        document.getElementById('discordIdInput').value = urlParams.get('id');
-    </script>
-</body>
-</html>
+        } else {
+            return res.status(403).send(`<body style="background:#0f1113;color:white;text-align:center;padding:50px;font-family:sans-serif;"><h1>❌ Błąd: Kod z Discorda nie znajduje się w opisie Twojego profilu Roblox.</h1><p>Wklej kod BK-... do opisu i spróbuj ponownie.</p></body>`);
+        }
+    } catch (error) {
+        return res.status(500).send(`<body style="background:#0f1113;color:white;text-align:center;padding:50px;font-family:sans-serif;"><h1>❌ Błąd komunikacji Vercel -> Roblox API</h1></body>`);
+    }
+}
